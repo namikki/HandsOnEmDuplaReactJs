@@ -9,7 +9,7 @@ const categoryService = {
       .from('categories')
       .select('*', { count: 'exact' })
       .range(from, to)
-      .order('title', { ascending: true });
+      .order('nm_categoria', { ascending: true });
     if (error) {
       console.error('Erro ao buscar categorias:', error);
       throw error;
@@ -34,10 +34,10 @@ const categoryService = {
     return data;
   },
   
-  async createCategory(categories) {
+  async createCategory(category) {
     const { data, error } = await supabase
       .from('categories')
-      .insert([categories])
+      .insert([category])
       .select();
     if (error) {
       console.error('Erro ao criar categoria:', error);
@@ -46,10 +46,10 @@ const categoryService = {
     return data[0];
   },
   
-  async updateCategory(id, categories) {
+  async updateCategory(id, category) {
     const { data, error } = await supabase
       .from('categories')
-      .update(categories)
+      .update(category)
       .eq('id', id)
       .select();
     if (error) {

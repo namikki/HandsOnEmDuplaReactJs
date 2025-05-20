@@ -21,7 +21,7 @@ const AdminCategoriesPage = () => {
         isError,
         error,
     } = useQuery({
-        queryKey: ['products', currentPage],
+        queryKey: ['categories', currentPage],
         queryFn: () => categoryService.getCategoriesByPage(currentPage, CATEGORIES_PER_PAGE),
         keepPreviousData: true,
     });    
@@ -85,14 +85,12 @@ const AdminCategoriesPage = () => {
                                 <table className="table table-striped align-middle mb-0">
                                     <thead className="table-dark">
                                         <tr>
-                                            <th className="one-line-cell">Foto</th>
                                             <th>Nome</th>
-                                            <th>Preço</th>
                                             <th className="text-center">Ações</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {data?.products?.length === 0 && (
+                                        {data?.categories?.length === 0 && (
                                             <tr>
                                                 <td colSpan={4} className="text-center py-4">
                                                     Nenhuma categoria encontrada.
@@ -100,16 +98,8 @@ const AdminCategoriesPage = () => {
                                             </tr>
                                         )}
                                         {data?.categories && data.categories.map((category) => (
-                                            <tr key={categories.id}>
-                                                <td className="one-line-cell px-3">
-                                                    <img
-                                                        src={category.image_url}
-                                                        alt={category.title}
-                                                        className="rounded"
-                                                        style={{ width: 'auto', height: '60px', }} />
-                                                </td>
-                                                <td>{categories.title}</td>
-                                                <td className="one-line-cell">{formatPrice(category.price)}</td>
+                                            <tr key={category.id}>
+                                                <td>{category.nm_categoria}</td>
                                                 <td className="text-center one-line-cell px-3">
                                                     <button
                                                         className="btn btn-sm btn-outline-warning me-2"

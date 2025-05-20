@@ -9,16 +9,11 @@ const AdminCreateCategoryPage = () => {
     const navigate = useNavigate();
     const { state } = useLocation();
     const queryClient = useQueryClient();
-    const categoryToEdit = state?.product;
+    const categoryToEdit = state?.category;
     const fileRef = useRef(null);
     const [category, setCategory] = useState({
         // mudar aqui
-        title: '',
-        description: '',
-        price: '',
-        image_file: null,
-        image_preview: '',
-        image_url: ''
+        nm_categoria: ''
     });
 
     const [errors, setErrors] = useState({});
@@ -27,10 +22,7 @@ const AdminCreateCategoryPage = () => {
     useEffect(() => {
         if (categoryToEdit) {
             setCategory({
-                title: categoryToEdit.title,
-                description: categoryToEdit.description,
-                price: categoryToEdit.price,
-                image_url: categoryToEdit.image_url
+                nm_categoria: categoryToEdit.nm_categoria
             });
         }
     }, [categoryToEdit]);
@@ -49,7 +41,7 @@ const AdminCreateCategoryPage = () => {
     const updateCategoryMutation = useMutation({
         mutationFn: ({ id, ...fields }) => categoryService.updateCategory(id, fields),
         onSuccess: () => {
-            queryClient.invalidateQueries(['products']).then(() => {
+            queryClient.invalidateQueries(['categories']).then(() => {
                 toast.success('Categoria atualizada com sucesso!', { icon: '✅' });
                 navigate('/admin/categories');
             }).catch((error) => {
@@ -63,34 +55,18 @@ const AdminCreateCategoryPage = () => {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setProduct((prev) => ({ ...prev, [name]: value }));
+        setCategory((prev) => ({ ...prev, [name]: value }));
         if (errors[name]) {
             setErrors((prev) => ({ ...prev, [name]: '' }));
         }
     };
 
-    const handleFileSelect = e => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-        setProduct(p => ({ ...p, image_file: file, image_preview: URL.createObjectURL(file), image_url: '' }));
-    };
-
     const validateForm = () => {
         const newErrors = {};
-        if (!category.title.trim()) {
-            newErrors.title = 'O título é obrigatório';
+        if (!category.nm_categoria.trim()) {
+            newErrors.nm_categoria = 'A categoria é obrigatória';
         }
-        if (!category.description.trim()) {
-            newErrors.description = 'A descrição é obrigatória';
-        }
-        if (!category.price) {
-            newErrors.price = 'O preço é obrigatório';
-        } else if (isNaN(Number(category.price)) || Number(category.price) <= 0) {
-            newErrors.price = 'O preço deve ser um número positivo';
-        }
-        if (!category.image_file && !category.image_url) {
-            newErrors.image_file = 'Selecione uma foto';
-        }
+
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -98,17 +74,10 @@ const AdminCreateCategoryPage = () => {
     const handleSubmit = async e => {
         e.preventDefault();
         if (!validateForm()) return;
-
+    
         try {
-            let path = category.image_url;
-            if (category.image_file) {
-                path = await categoryService.uploadImage(category.image_file);
-            }
-
-            const payload = { ...category, image_url: path, price: parseFloat(category.price) };
-            delete payload.image_file;
-            delete payload.image_preview;
-
+            const payload = { ...category };
+    
             if (categoryToEdit) {
                 await updateCategoryMutation.mutateAsync({ id: categoryToEdit.id, ...payload });
             } else {
@@ -118,6 +87,7 @@ const AdminCreateCategoryPage = () => {
             toast.error(`Erro ao salvar: ${err.message}`, { icon: '❌' });
         }
     };
+    
 
     return (
         <div className="row justify-content-center">
@@ -129,56 +99,17 @@ const AdminCreateCategoryPage = () => {
                     <div className="card-body">
                         <form onSubmit={handleSubmit}>
                             <div className="mb-3">
-                                <label htmlFor="title" className="form-label">Título</label>
+                                <label htmlFor="nm_categoria" className="form-label">Nome da Categoria</label>
                                 <input
                                     type="text"
-                                    className={`form-control ${errors.title ? 'is-invalid' : ''}`}
-                                    id="title"
-                                    name="title"
-                                    value={category.title}
+                                    className={`form-control ${errors.nm_categoria ? 'is-invalid' : ''}`}
+                                    id="nm_categoria"
+                                    name="nm_categoria"
+                                    value={category.nm_categoria}
                                     onChange={handleChange} autoFocus />
-                                {errors.title && <div className="invalid-feedback">{errors.title}</div>}
+                                {errors.nm_categoria && <div className="invalid-feedback">{errors.nm_categoria}</div>}
                             </div>
-                            <div className="mb-3">
-                                <label htmlFor="description" className="form-label">Descrição</label>
-                                <textarea
-                                    className={`form-control ${errors.description ? 'is-invalid' : ''}`}
-                                    id="description"
-                                    name="description"
-                                    rows="3"
-                                    value={category.description}
-                                    onChange={handleChange}></textarea>
-                                {errors.description && <div className="invalid-feedback">{errors.description}</div>}
-                            </div>
-                            <div className="mb-3">
-                                <label htmlFor="price" className="form-label">Preço (R$)</label>
-                                <input
-                                    type="number"
-                                    step="0.01"
-                                    className={`form-control ${errors.price ? 'is-invalid' : ''}`}
-                                    id="price"
-                                    name="price"
-                                    value={category.price}
-                                    onChange={handleChange} />
-                                {errors.price && <div className="invalid-feedback">{errors.price}</div>}
-                            </div>
-                            <div className="mb-3">
-                                <label className="form-label">Foto do produto</label><br />
-                                <button type="button" className="btn btn-outline-secondary btn-sm" onClick={() => fileRef.current?.click()}>
-                                    Selecionar arquivo
-                                </button>
-                                <input type="file" accept="image/*" className="d-none" ref={fileRef} onChange={handleFileSelect} />
-                            </div>
-
-                            {category.image_preview || category.image_url ? (
-                                <div className="mb-3 text-start">
-                                    <img
-                                        src={category.image_preview || category.image_url}
-                                        alt="Pré-visualização"
-                                        className="img-thumbnail"
-                                        style={{ maxHeight: 200 }}/>
-                                </div>
-                            ) : null}
+                            
 
                             <div className="d-flex">
                                 <button
@@ -190,7 +121,7 @@ const AdminCreateCategoryPage = () => {
                                             <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                                             Salvando...
                                         </>
-                                    ) : 'Salvar Produto'}
+                                    ) : 'Salvar Categoria'}
                                 </button>
                                 <button
                                     type="button"
